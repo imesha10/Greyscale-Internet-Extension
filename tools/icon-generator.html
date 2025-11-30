@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Icon Generator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #1a1a2e;
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      margin: 0;
+    }
+    h1 {
+      margin: 0;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .icons {
+      display: flex;
+      gap: 32px;
+      align-items: end;
+    }
+    .icon-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    canvas {
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+    }
+    button {
+      padding: 10px 20px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+    }
+    .label {
+      font-size: 14px;
+      color: #888;
+    }
+    .instructions {
+      max-width: 500px;
+      text-align: center;
+      color: #aaa;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <h1>Greyscale Web Icons</h1>
+  
+  <div class="icons">
+    <div class="icon-box">
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <span class="label">16x16</span>
+      <button onclick="download(16)">Download</button>
+    </div>
+    <div class="icon-box">
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <span class="label">48x48</span>
+      <button onclick="download(48)">Download</button>
+    </div>
+    <div class="icon-box">
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <span class="label">128x128</span>
+      <button onclick="download(128)">Download</button>
+    </div>
+  </div>
+
+  <button onclick="downloadAll()" style="margin-top: 20px; padding: 14px 32px; font-size: 16px;">
+    ⬇️ Download All Icons
+  </button>
+
+  <p class="instructions">
+    Click "Download All Icons" and save the 3 PNG files to your 
+    <strong>greyscale-extension/icons/</strong> folder
+  </p>
+
+  <script>
+    const sizes = [16, 48, 128];
+
+    function drawIcon(size) {
+      const canvas = document.getElementById(`icon${size}`);
+      const ctx = canvas.getContext('2d');
+      
+      // Create gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#6366f1');
+      gradient.addColorStop(1, '#a855f7');
+      
+      // Draw rounded rectangle background
+      const radius = size * 0.1875; // Proportional corner radius
+      ctx.beginPath();
+      ctx.roundRect(0, 0, size, size, radius);
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // Draw circle outline
+      const centerX = size / 2;
+      const centerY = size / 2;
+      const circleRadius = size * 0.28;
+      const lineWidth = Math.max(1, size * 0.047);
+      
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = lineWidth;
+      ctx.stroke();
+      
+      // Draw half circle fill (left side)
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, circleRadius - lineWidth/2, Math.PI * 0.5, Math.PI * 1.5);
+      ctx.closePath();
+      ctx.fillStyle = 'white';
+      ctx.fill();
+    }
+
+    function download(size) {
+      const canvas = document.getElementById(`icon${size}`);
+      const link = document.createElement('a');
+      link.download = `icon${size}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+
+    function downloadAll() {
+      sizes.forEach((size, index) => {
+        setTimeout(() => download(size), index * 300);
+      });
+    }
+
+    // Draw all icons on load
+    sizes.forEach(drawIcon);
+  </script>
+</body>
+</html>

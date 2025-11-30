@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Greyscale Web</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10" fill="currentColor"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <h1>Greyscale Web</h1>
+          <p>Focus without distractions</p>
+        </div>
+      </div>
+    </header>
+
+    <!-- Current Site Toggle -->
+    <section class="current-site card">
+      <div class="card-header">
+        <span class="card-icon">🌐</span>
+        <div class="card-title">
+          <h2>Current Website</h2>
+          <p class="current-domain" id="currentDomain">loading...</p>
+        </div>
+      </div>
+      <div class="toggle-wrapper">
+        <label class="toggle">
+          <input type="checkbox" id="currentSiteToggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+      <button class="action-btn" id="enableAllBtn">
+        <span class="action-icon">🌑</span>
+        <span>Enable All</span>
+      </button>
+      <button class="action-btn" id="disableAllBtn">
+        <span class="action-icon">🌕</span>
+        <span>Disable All</span>
+      </button>
+    </section>
+
+    <!-- Intensity Slider -->
+    <section class="intensity-section card">
+      <div class="card-header">
+        <span class="card-icon">🎚️</span>
+        <h2>Intensity</h2>
+        <span class="intensity-value" id="intensityValue">100%</span>
+      </div>
+      <div class="slider-container">
+        <input type="range" id="intensitySlider" min="0" max="100" value="100" class="slider">
+        <div class="slider-labels">
+          <span>Color</span>
+          <span>Greyscale</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Managed Sites -->
+    <section class="sites-section">
+      <div class="section-header">
+        <h2>Managed Sites</h2>
+        <span class="site-count" id="siteCount">0 sites</span>
+      </div>
+      
+      <!-- Add Site Form -->
+      <div class="add-site-form">
+        <div class="input-wrapper">
+          <input type="text" id="newSiteInput" placeholder="Enter domain (e.g., youtube.com)">
+          <button class="add-btn" id="addSiteBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sites List -->
+      <div class="sites-list" id="sitesList">
+        <!-- Sites will be dynamically added here -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">📋</div>
+        <p>No sites added yet</p>
+        <span>Add a domain above to get started</span>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Made with 🖤 for focused browsing</p>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
