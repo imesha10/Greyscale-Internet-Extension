@@ -3,10 +3,11 @@ let state = {
   sites: {},
   intensity: 100,
   currentDomain: '',
-  currentTabId: null
+  currentTabId: null,
+  currentTabUrl: ''
 };
 
-// Debounce utility - prevents rapid-fire saves
+// Debounce utility
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -19,13 +20,7 @@ function debounce(func, wait) {
   };
 }
 
-// Debounced save function
-const debouncedSaveIntensity = debounce(async () => {
-  await chrome.storage.sync.set({ intensity: state.intensity });
-  showToast('Intensity updated', 'success');
-}, 300);
-
-// DOM Elements - cache them once
+// DOM Elements
 const elements = {};
 
 // Initialize popup
@@ -37,7 +32,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
 });
 
-// Cache DOM elements (faster than querying each time)
+// Cache DOM elements
 function cacheElements() {
   elements.currentDomain = document.getElementById('currentDomain');
   elements.currentSiteToggle = document.getElementById('currentSiteToggle');
@@ -69,6 +64,7 @@ async function getCurrentTab() {
       const url = new URL(tab.url);
       state.currentDomain = url.hostname.replace(/^www\./, '');
       state.currentTabId = tab.id;
+      state.currentTabUrl = tab.url;
       elements.currentDomain.textContent = state.currentDomain;
       elements.currentSiteToggle.checked = state.sites[state.currentDomain]?.enabled || false;
     } else {
@@ -90,19 +86,25 @@ function setupEventListeners() {
   elements.currentSiteToggle.addEventListener('change', async (e) => {
     if (state.currentDomain && state.currentDomain !== 'Not available') {
       await toggleSite(state.currentDomain, e.target.checked);
+      // Immediately update the current tab
+      await updateCurrentTab();
       renderSitesList();
     }
   });
 
-  // Intensity slider - update display immediately, save with debounce
+  // Intensity slider - update display immediately
   elements.intensitySlider.addEventListener('input', (e) => {
     state.intensity = parseInt(e.target.value);
     elements.intensityValue.textContent = `${state.intensity}%`;
   });
 
-  elements.intensitySlider.addEventListener('change', () => {
-    debouncedSaveIntensity();
-  });
+  // Save intensity on change (debounced)
+  const debouncedIntensitySave = debounce(async () => {
+    await chrome.storage.sync.set({ intensity: state.intensity });
+    showToast('Intensity updated', 'success');
+  }, 300);
+
+  elements.intensitySlider.addEventListener('change', debouncedIntensitySave);
 
   // Add site
   elements.addSiteBtn.addEventListener('click', addNewSite);
@@ -113,6 +115,21 @@ function setupEventListeners() {
   // Bulk actions
   elements.enableAllBtn.addEventListener('click', () => bulkToggle(true));
   elements.disableAllBtn.addEventListener('click', () => bulkToggle(false));
+}
+
+// Update current tab immediately
+async function updateCurrentTab() {
+  if (state.currentTabId && state.currentTabUrl) {
+    try {
+      await chrome.runtime.sendMessage({
+        action: 'updateTab',
+        tabId: state.currentTabId,
+        url: state.currentTabUrl
+      });
+    } catch (e) {
+      console.log('Could not update tab:', e);
+    }
+  }
 }
 
 // Bulk toggle all sites
@@ -157,6 +174,7 @@ async function addNewSite() {
   
   if (state.currentDomain === domain) {
     elements.currentSiteToggle.checked = true;
+    await updateCurrentTab();
   }
   
   renderSitesList();
@@ -170,7 +188,7 @@ async function toggleSite(domain, enabled) {
   } else {
     state.sites[domain].enabled = enabled;
   }
-  await saveState();
+  await chrome.storage.sync.set({ greyscaleSites: state.sites });
 }
 
 // Delete site
@@ -180,18 +198,19 @@ async function deleteSite(domain) {
   
   if (state.currentDomain === domain) {
     elements.currentSiteToggle.checked = false;
+    await updateCurrentTab();
   }
   
   renderSitesList();
   showToast(`${domain} removed`, 'success');
 }
 
-// Save state to storage (this triggers background.js update)
+// Save state to storage
 async function saveState() {
   await chrome.storage.sync.set({ greyscaleSites: state.sites });
 }
 
-// Render sites list using DocumentFragment (faster)
+// Render sites list
 function renderSitesList() {
   const domains = Object.keys(state.sites);
   
@@ -205,7 +224,6 @@ function renderSitesList() {
   
   elements.emptyState.classList.remove('show');
   
-  // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
   
   domains.forEach(domain => {
@@ -247,14 +265,16 @@ function createSiteItem(domain) {
     </div>
   `;
   
-  // Add event listeners
+  // Toggle handler
   div.querySelector('.site-toggle').addEventListener('change', async (e) => {
     await toggleSite(domain, e.target.checked);
     if (domain === state.currentDomain) {
       elements.currentSiteToggle.checked = e.target.checked;
+      await updateCurrentTab();
     }
   });
   
+  // Delete handler
   div.querySelector('.delete-btn').addEventListener('click', () => deleteSite(domain));
   
   return div;
@@ -275,9 +295,9 @@ function showToast(message, type = 'success') {
   toast.textContent = message;
   toast.className = `toast ${type}`;
   
-  // Force reflow for animation
-  toast.offsetHeight;
-  toast.classList.add('show');
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
   
   toastTimeout = setTimeout(() => {
     toast.classList.remove('show');
